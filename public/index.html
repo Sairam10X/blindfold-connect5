@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Blindfold Connect 5</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&display=swap">
+  <style>
+    :root {
+      --bg: #0e1013;
+      --surface: #171a20;
+      --surface-2: #21252e;
+      --border: #2c313d;
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --ivory: #f4efe6;
+      --ivory-ring: #cfc6b4;
+      --ivory-text: #18181b;
+      --ember: #f97316;
+      --ember-ring: #fb923c;
+      --ember-text: #18100a;
+      --mint: #34d399;
+      --mint-soft: rgba(52, 211, 153, 0.16);
+      --mint-text: #042f22;
+      --danger: #f87171;
+      --danger-soft: rgba(248, 113, 113, 0.14);
+      --online: #34d399;
+      --offline: #6b7280;
+      --radius: 14px;
+      --radius-sm: 10px;
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #f6f6f4;
+        --surface: #ffffff;
+        --surface-2: #eceee9;
+        --border: #d6d8d2;
+        --text: #14171a;
+        --text-muted: #5b626d;
+        --ivory: #ebe4d5;
+        --ivory-ring: #8f8675;
+        --ivory-text: #18181b;
+        --ember: #ea580c;
+        --ember-ring: #c2410c;
+        --ember-text: #ffffff;
+        --mint: #10b981;
+        --mint-soft: rgba(16, 185, 129, 0.14);
+        --mint-text: #ffffff;
+        --danger: #dc2626;
+        --danger-soft: rgba(220, 38, 38, 0.1);
+        --online: #10b981;
+        --offline: #9ca3af;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Bricolage Grotesque", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.4;
+      min-height: 100dvh;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      padding:
+        max(16px, env(safe-area-inset-top))
+        max(16px, env(safe-area-inset-right))
+        max(24px, env(safe-area-inset-bottom))
+        max(16px, env(safe-area-inset-left));
+    }
+
+    .app {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    h1, h2, p {
+      margin: 0;
+    }
+
+    button, input {
+      font: inherit;
+      color: inherit;
+    }
+
+    button {
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      border-radius: var(--radius-sm);
+      min-height: 44px;
+      min-width: 44px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: transform 0.08s ease, background-color 0.12s ease, border-color 0.12s ease, opacity 0.12s ease;
+    }
+
+    button:active:not(:disabled) {
+      transform: scale(0.97);
+    }
+
+    button:disabled {
+      opacity: 0.42;
+      cursor: not-allowed;
+    }
+
+    button.primary {
+      background: var(--mint);
+      color: var(--mint-text);
+      border-color: var(--mint);
+      font-weight: 700;
+    }
+
+    button.ghost {
+      background: transparent;
+      border-color: var(--border);
+      color: var(--text-muted);
+      padding: 8px 12px;
+      font-size: 0.875rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Home screen */
+    .brand {
+      padding: 16px 0 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .brand h1 {
+      font-size: 1.85rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .brand p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .join-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .code-input {
+      flex: 1;
+      min-height: 48px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .code-input:focus {
+      outline: 2px solid var(--mint);
+      outline-offset: 1px;
+    }
+
+    .error-text {
+      color: var(--danger);
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    /* Room header */
+    .room-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .room-code-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .room-code-badge {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 6px 12px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      font-size: 1.05rem;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* Players bar */
+    .players-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      font-size: 0.92rem;
+    }
+
+    .seat-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+    }
+
+    .stone-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    .stone-dot.ivory {
+      background: var(--ivory);
+      border: 1.5px solid var(--ivory-ring);
+    }
+
+    .stone-dot.ember {
+      background: var(--ember);
+      border: 1.5px solid var(--ember-ring);
+    }
+
+    .opponent-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--text-muted);
+      font-weight: 500;
+      font-size: 0.875rem;
+    }
+
+    .presence-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--offline);
+      flex-shrink: 0;
+    }
+
+    .presence-dot.online {
+      background: var(--online);
+    }
+
+    /* Status banner */
+    .status-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .status-card.my-turn {
+      border-color: var(--mint);
+      background: linear-gradient(180deg, var(--mint-soft), var(--surface) 70%);
+    }
+
+    .status-line {
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+
+    .moves-summary {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding-top: 4px;
+      border-top: 1px solid var(--border);
+      font-size: 0.875rem;
+    }
+
+    .move-stat-label {
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      display: block;
+    }
+
+    .move-stat-val {
+      font-weight: 700;
+      font-size: 0.98rem;
+    }
+
+    /* Taken warning */
+    .taken-banner {
+      background: var(--danger-soft);
+      border: 1px solid var(--danger);
+      color: var(--danger);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      text-align: center;
+    }
+
+    /* Coordinate picker */
+    .picker-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .selection-readout {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      min-height: 56px;
+    }
+
+    .selection-label {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .selection-coord {
+      font-size: 1.9rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      color: var(--mint);
+    }
+
+    .selection-coord.empty {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .grid-section {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .grid-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
+
+    .tap-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+    }
+
+    .tap-btn {
+      min-height: 44px;
+      padding: 0;
+      font-size: 1rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .tap-btn.selected {
+      background: var(--mint);
+      color: var(--mint-text);
+      border-color: var(--mint);
+    }
+
+    .place-btn {
+      width: 100%;
+      min-height: 52px;
+      font-size: 1.05rem;
+    }
+
+    /* Reveal board */
+    .reveal-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .board-grid {
+      display: grid;
+      grid-template-columns: 18px repeat(15, minmax(0, 1fr));
+      gap: 2px;
+      align-items: center;
+      width: 100%;
+    }
+
+    .board-axis {
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-align: center;
+      user-select: none;
+    }
+
+    .board-cell {
+      aspect-ratio: 1;
+      background: var(--surface-2);
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .board-cell.win-cell {
+      background: var(--mint-soft);
+      box-shadow: inset 0 0 0 1.5px var(--mint);
+    }
+
+    .stone {
+      width: 78%;
+      height: 78%;
+      border-radius: 50%;
+    }
+
+    .stone.ivory {
+      background: var(--ivory);
+      border: 1px solid var(--ivory-ring);
+    }
+
+    .stone.ember {
+      background: var(--ember);
+      border: 1px solid var(--ember-ring);
+    }
+
+    .board-cell.win-cell .stone {
+      box-shadow: 0 0 0 2px var(--mint);
+    }
+
+    /* Move history */
+    details.history-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+    }
+
+    details.history-card summary {
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.95rem;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 28px;
+    }
+
+    details.history-card summary::-webkit-details-marker {
+      display: none;
+    }
+
+    details.history-card summary::after {
+      content: "Show";
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    details.history-card[open] summary::after {
+      content: "Hide";
+    }
+
+    .history-list {
+      margin: 10px 0 0;
+      padding: 10px 0 0 22px;
+      border-top: 1px solid var(--border);
+      max-height: 220px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.9rem;
+    }
+
+    .history-empty {
+      margin: 10px 0 0;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+
+    /* Full room view */
+    .full-card {
+      text-align: center;
+      padding: 28px 18px;
+    }
+
+    .full-card h2 {
+      font-size: 1.35rem;
+    }
+
+    .full-card p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        transition: none !important;
+        animation: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <!-- Home View -->
+    <section id="home-view">
+      <div class="brand">
+        <h1>Blindfold Connect 5</h1>
+        <p>15×15 coordinate-only five-in-a-row. No board until the game ends.</p>
+      </div>
+
+      <div class="card">
+        <button id="create-btn" class="primary" type="button">Create room</button>
+      </div>
+
+      <form id="join-form" class="card" novalidate>
+        <label for="room-input" class="grid-title">Join existing room</label>
+        <div class="join-row">
+          <input
+            id="room-input"
+            class="code-input"
+            type="text"
+            maxlength="4"
+            placeholder="ABCD"
+            autocomplete="off"
+            autocapitalize="characters"
+            spellcheck="false"
+            aria-label="4-letter room code"
+          >
+          <button id="join-btn" type="submit">Join room</button>
+        </div>
+        <p id="join-error" class="error-text hidden" role="alert"></p>
+      </form>
+    </section>
+
+    <!-- Full Room View -->
+    <section id="full-view" class="card full-card hidden">
+      <h2>This room is full.</h2>
+      <p>Only 2 players can join a room.</p>
+      <button id="full-home-btn" class="primary" type="button">Back to home</button>
+    </section>
+
+    <!-- Game View -->
+    <section id="game-view" class="hidden" style="display:flex;flex-direction:column;gap:12px;">
+      <header class="room-header">
+        <div class="room-code-wrap">
+          <span class="room-code-badge" id="room-code-label">----</span>
+        </div>
+        <div class="header-actions">
+          <button id="invite-btn" type="button">Invite</button>
+          <button id="leave-btn" class="ghost" type="button">Leave</button>
+        </div>
+      </header>
+
+      <div class="players-bar">
+        <span class="seat-pill" id="seat-pill">
+          <span class="stone-dot ivory" id="seat-dot"></span>
+          <span id="seat-label">Connecting...</span>
+        </span>
+        <span class="opponent-status">
+          <span class="presence-dot" id="opp-dot"></span>
+          <span id="opp-status-text">Waiting for opponent</span>
+        </span>
+      </div>
+
+      <div class="status-card" id="status-card">
+        <div class="status-line" id="status-line">Share the invite to start</div>
+        <div class="moves-summary">
+          <div>
+            <span class="move-stat-label">Opponent's last move</span>
+            <span class="move-stat-val" id="opp-last-move">—</span>
+          </div>
+          <div>
+            <span class="move-stat-label">Your last move</span>
+            <span class="move-stat-val" id="your-last-move">—</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="taken-banner" class="taken-banner hidden" role="alert"></div>
+
+      <!-- Active Play Picker (Blindfold) -->
+      <div id="picker-card" class="picker-card">
+        <div class="selection-readout">
+          <span class="selection-label">Selected coordinate</span>
+          <span class="selection-coord empty" id="selection-readout">Pick col &amp; row</span>
+        </div>
+
+        <div class="grid-section">
+          <div class="grid-title">Column (A–O)</div>
+          <div class="tap-grid" id="col-grid" role="group" aria-label="Columns A to O"></div>
+        </div>
+
+        <div class="grid-section">
+          <div class="grid-title">Row (1–15)</div>
+          <div class="tap-grid" id="row-grid" role="group" aria-label="Rows 1 to 15"></div>
+        </div>
+
+        <button id="place-btn" class="primary place-btn" type="button" disabled>Place stone</button>
+      </div>
+
+      <!-- End of Game Board Reveal -->
+      <div id="reveal-card" class="reveal-card hidden">
+        <div id="board-grid" class="board-grid" aria-label="Revealed final board"></div>
+        <button id="rematch-btn" class="primary place-btn" type="button">Play again</button>
+      </div>
+
+      <!-- Collapsible Move History -->
+      <details class="history-card" id="history-details">
+        <summary id="history-summary">Move history (0)</summary>
+        <p id="history-empty" class="history-empty">No moves yet.</p>
+        <ol id="history-list" class="history-list hidden"></ol>
+      </details>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      const COLS = "ABCDEFGHIJKLMNO";
+      const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ"; // No I or O
+      const TOKEN_KEY = "bc5_token";
+
+      // DOM elements
+      const homeView = document.getElementById("home-view");
+      const fullView = document.getElementById("full-view");
+      const gameView = document.getElementById("game-view");
+
+      const createBtn = document.getElementById("create-btn");
+      const joinForm = document.getElementById("join-form");
+      const roomInput = document.getElementById("room-input");
+      const joinError = document.getElementById("join-error");
+      const fullHomeBtn = document.getElementById("full-home-btn");
+
+      const roomCodeLabel = document.getElementById("room-code-label");
+      const inviteBtn = document.getElementById("invite-btn");
+      const leaveBtn = document.getElementById("leave-btn");
+      const seatDot = document.getElementById("seat-dot");
+      const seatLabel = document.getElementById("seat-label");
+      const oppDot = document.getElementById("opp-dot");
+      const oppStatusText = document.getElementById("opp-status-text");
+
+      const statusCard = document.getElementById("status-card");
+      const statusLine = document.getElementById("status-line");
+      const oppLastMoveEl = document.getElementById("opp-last-move");
+      const yourLastMoveEl = document.getElementById("your-last-move");
+      const takenBanner = document.getElementById("taken-banner");
+
+      const pickerCard = document.getElementById("picker-card");
+      const selectionReadout = document.getElementById("selection-readout");
+      const colGrid = document.getElementById("col-grid");
+      const rowGrid = document.getElementById("row-grid");
+      const placeBtn = document.getElementById("place-btn");
+
+      const revealCard = document.getElementById("reveal-card");
+      const boardGrid = document.getElementById("board-grid");
+      const rematchBtn = document.getElementById("rematch-btn");
+
+      const historySummary = document.getElementById("history-summary");
+      const historyEmpty = document.getElementById("history-empty");
+      const historyList = document.getElementById("history-list");
+
+      // State
+      let currentRoom = null;
+      let ws = null;
+      let reconnectTimer = null;
+      let intentionalClose = false;
+      let isRoomFull = false;
+      let gameState = null;
+      let selectedCol = null;
+      let selectedRow = null;
+      let prevMyTurn = false;
+      let prevMoveCount = 0;
+
+      function getToken() {
+        let token = localStorage.getItem(TOKEN_KEY);
+        if (!token) {
+          token = crypto.randomUUID
+            ? crypto.randomUUID()
+            : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+                const r = (Math.random() * 16) | 0;
+                return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
+              });
+          localStorage.setItem(TOKEN_KEY, token);
+        }
+        return token;
+      }
+
+      function generateRoomCode() {
+        let code = "";
+        for (let i = 0; i < 4; i++) {
+          code += CODE_ALPHABET[Math.floor(Math.random() * CODE_ALPHABET.length)];
+        }
+        return code;
+      }
+
+      function formatCoord(x, y) {
+        return COLS[x] + String(y + 1);
+      }
+
+      function seatName(seat) {
+        return seat === 1 ? "Ivory" : "Ember";
+      }
+
+      function vibrate(pattern) {
+        if (typeof navigator.vibrate === "function") {
+          try {
+            navigator.vibrate(pattern);
+          } catch {
+            // Ignore unsupported environments
+          }
+        }
+      }
+
+      function showView(view) {
+        homeView.classList.toggle("hidden", view !== "home");
+        fullView.classList.toggle("hidden", view !== "full");
+        gameView.classList.toggle("hidden", view !== "game");
+      }
+
+      // Build tap-grids once
+      const colButtons = [];
+      for (let x = 0; x < 15; x++) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "tap-btn";
+        btn.textContent = COLS[x];
+        btn.setAttribute("aria-label", "Column " + COLS[x]);
+        btn.addEventListener("click", () => {
+          selectedCol = selectedCol === x ? null : x;
+          hideTakenBanner();
+          renderPicker();
+        });
+        colGrid.appendChild(btn);
+        colButtons.push(btn);
+      }
+
+      const rowButtons = [];
+      for (let y = 0; y < 15; y++) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "tap-btn";
+        btn.textContent = String(y + 1);
+        btn.setAttribute("aria-label", "Row " + String(y + 1));
+        btn.addEventListener("click", () => {
+          selectedRow = selectedRow === y ? null : y;
+          hideTakenBanner();
+          renderPicker();
+        });
+        rowGrid.appendChild(btn);
+        rowButtons.push(btn);
+      }
+
+      function hideTakenBanner() {
+        takenBanner.classList.add("hidden");
+        takenBanner.textContent = "";
+      }
+
+      function renderPicker() {
+        colButtons.forEach((btn, idx) => {
+          btn.classList.toggle("selected", selectedCol === idx);
+        });
+        rowButtons.forEach((btn, idx) => {
+          btn.classList.toggle("selected", selectedRow === idx);
+        });
+
+        if (selectedCol !== null && selectedRow !== null) {
+          selectionReadout.textContent = formatCoord(selectedCol, selectedRow);
+          selectionReadout.classList.remove("empty");
+        } else if (selectedCol !== null) {
+          selectionReadout.textContent = COLS[selectedCol] + "·";
+          selectionReadout.classList.remove("empty");
+        } else if (selectedRow !== null) {
+          selectionReadout.textContent = "·" + String(selectedRow + 1);
+          selectionReadout.classList.remove("empty");
+        } else {
+          selectionReadout.textContent = "Pick col & row";
+          selectionReadout.classList.add("empty");
+        }
+
+        const isOpen = ws && ws.readyState === WebSocket.OPEN;
+        const canPlace = Boolean(
+          isOpen &&
+          gameState &&
+          gameState.ready &&
+          gameState.winner === null &&
+          gameState.turn === gameState.you &&
+          selectedCol !== null &&
+          selectedRow !== null
+        );
+        placeBtn.disabled = !canPlace;
+      }
+
+      function renderRevealedBoard(board, line) {
+        boardGrid.innerHTML = "";
+        const winSet = new Set((line || []).map(([x, y]) => `${x},${y}`));
+
+        // Top-left corner spacer
+        const corner = document.createElement("div");
+        boardGrid.appendChild(corner);
+
+        // Column headers A-O
+        for (let x = 0; x < 15; x++) {
+          const lbl = document.createElement("div");
+          lbl.className = "board-axis";
+          lbl.textContent = COLS[x];
+          boardGrid.appendChild(lbl);
+        }
+
+        // Rows 1-15
+        for (let y = 0; y < 15; y++) {
+          const rowLbl = document.createElement("div");
+          rowLbl.className = "board-axis";
+          rowLbl.textContent = String(y + 1);
+          boardGrid.appendChild(rowLbl);
+
+          for (let x = 0; x < 15; x++) {
+            const cell = document.createElement("div");
+            cell.className = "board-cell";
+            if (winSet.has(`${x},${y}`)) {
+              cell.classList.add("win-cell");
+            }
+            const val = board[y][x];
+            if (val === 1 || val === 2) {
+              const stone = document.createElement("span");
+              stone.className = "stone " + (val === 1 ? "ivory" : "ember");
+              cell.appendChild(stone);
+            }
+            boardGrid.appendChild(cell);
+          }
+        }
+      }
+
+      function renderGameState() {
+        if (!gameState) return;
+
+        const { you, turn, winner, ready, online, moves, board, line } = gameState;
+        const oppSeat = you === 1 ? 2 : 1;
+
+        // Seat display
+        seatDot.className = "stone-dot " + (you === 1 ? "ivory" : "ember");
+        seatLabel.textContent = `You: ${seatName(you)}`;
+
+        // Opponent online/offline status
+        const oppOnline = Boolean(online && online[oppSeat - 1]);
+        oppDot.classList.toggle("online", ready && oppOnline);
+        if (!ready) {
+          oppStatusText.textContent = "Waiting for opponent";
+        } else {
+          oppStatusText.textContent = oppOnline ? "Opponent online" : "Opponent offline";
+        }
+
+        // Status line
+        const isMyTurn = ready && winner === null && turn === you;
+        statusCard.classList.toggle("my-turn", isMyTurn);
+
+        if (!ready) {
+          statusLine.textContent = "Share the invite to start";
+        } else if (winner === you) {
+          statusLine.textContent = "You got five. You win!";
+        } else if (winner === 0) {
+          statusLine.textContent = "Draw. The board is full.";
+        } else if (winner !== null) {
+          statusLine.textContent = "Opponent got five. You lose.";
+        } else if (isMyTurn) {
+          statusLine.textContent = "Your move";
+        } else {
+          statusLine.textContent = "Opponent is thinking...";
+        }
+
+        // Vibrate when it becomes this player's turn
+        if (!prevMyTurn && isMyTurn) {
+          vibrate(50);
+        }
+        prevMyTurn = isMyTurn;
+
+        // Clear selection when a move succeeded or game reset
+        if (moves.length !== prevMoveCount) {
+          if (moves.length === 0 || (moves.length > prevMoveCount && moves[moves.length - 1].p === you)) {
+            selectedCol = null;
+            selectedRow = null;
+          }
+          prevMoveCount = moves.length;
+        }
+
+        // Last moves summary
+        let lastOpp = null;
+        let lastYou = null;
+        for (let i = moves.length - 1; i >= 0; i--) {
+          if (!lastOpp && moves[i].p === oppSeat) lastOpp = moves[i];
+          if (!lastYou && moves[i].p === you) lastYou = moves[i];
+          if (lastOpp && lastYou) break;
+        }
+        oppLastMoveEl.textContent = lastOpp ? formatCoord(lastOpp.x, lastOpp.y) : "—";
+        yourLastMoveEl.textContent = lastYou ? formatCoord(lastYou.x, lastYou.y) : "—";
+
+        // Move history
+        historySummary.textContent = `Move history (${moves.length})`;
+        if (moves.length === 0) {
+          historyEmpty.classList.remove("hidden");
+          historyList.classList.add("hidden");
+          historyList.innerHTML = "";
+        } else {
+          historyEmpty.classList.add("hidden");
+          historyList.classList.remove("hidden");
+          historyList.innerHTML = "";
+          moves.forEach((m) => {
+            const li = document.createElement("li");
+            const who = m.p === you ? `${seatName(m.p)} (You)` : seatName(m.p);
+            li.textContent = `${who}: ${formatCoord(m.x, m.y)}`;
+            historyList.appendChild(li);
+          });
+        }
+
+        // Board revealed ONLY when game is over
+        const isOver = winner !== null && Array.isArray(board);
+        pickerCard.classList.toggle("hidden", isOver);
+        revealCard.classList.toggle("hidden", !isOver);
+
+        if (isOver) {
+          hideTakenBanner();
+          renderRevealedBoard(board, line);
+        } else {
+          renderPicker();
+        }
+      }
+
+      function disconnectSocket() {
+        if (reconnectTimer) {
+          clearTimeout(reconnectTimer);
+          reconnectTimer = null;
+        }
+        if (ws) {
+          intentionalClose = true;
+          try {
+            ws.close(1000, "Leaving room");
+          } catch {
+            // Ignore
+          }
+          ws = null;
+        }
+      }
+
+      function connectToRoom(code) {
+        disconnectSocket();
+        currentRoom = code;
+        isRoomFull = false;
+        gameState = null;
+        selectedCol = null;
+        selectedRow = null;
+        prevMyTurn = false;
+        prevMoveCount = 0;
+        hideTakenBanner();
+
+        roomCodeLabel.textContent = code;
+        seatLabel.textContent = "Connecting...";
+        oppStatusText.textContent = "Waiting for opponent";
+        statusLine.textContent = "Share the invite to start";
+        oppLastMoveEl.textContent = "—";
+        yourLastMoveEl.textContent = "—";
+        historySummary.textContent = "Move history (0)";
+        historyEmpty.classList.remove("hidden");
+        historyList.classList.add("hidden");
+        pickerCard.classList.remove("hidden");
+        revealCard.classList.add("hidden");
+        showView("game");
+        renderPicker();
+
+        openSocket(code);
+      }
+
+      function openSocket(code) {
+        if (currentRoom !== code || isRoomFull) return;
+
+        intentionalClose = false;
+        const token = getToken();
+        const proto = location.protocol === "https:" ? "wss:" : "ws:";
+        const url = `${proto}//${location.host}/ws/${code}?t=${encodeURIComponent(token)}`;
+        const socket = new WebSocket(url);
+        ws = socket;
+
+        socket.addEventListener("open", () => {
+          if (ws !== socket) return;
+          renderPicker();
+        });
+
+        socket.addEventListener("message", (event) => {
+          if (ws !== socket) return;
+          let msg;
+          try {
+            msg = JSON.parse(event.data);
+          } catch {
+            return;
+          }
+
+          if (msg.type === "full") {
+            isRoomFull = true;
+            intentionalClose = true;
+            try {
+              socket.close(1000, "Room full");
+            } catch {
+              // Ignore
+            }
+            showView("full");
+            return;
+          }
+
+          if (msg.type === "taken") {
+            const coord = formatCoord(msg.x, msg.y);
+            takenBanner.textContent = `${coord} is already taken. Pick another spot.`;
+            takenBanner.classList.remove("hidden");
+            vibrate([45, 45, 45]);
+            return;
+          }
+
+          if (msg.type === "state") {
+            gameState = msg;
+            renderGameState();
+          }
+        });
+
+        socket.addEventListener("close", (event) => {
+          if (ws !== socket) return;
+          ws = null;
+          renderPicker();
+
+          if (intentionalClose || isRoomFull || event.code === 4003 || event.code === 4000) {
+            if (event.code === 4003) {
+              isRoomFull = true;
+              showView("full");
+            }
+            return;
+          }
+
+          reconnectTimer = setTimeout(() => {
+            reconnectTimer = null;
+            if (currentRoom === code && !isRoomFull) {
+              openSocket(code);
+            }
+          }, 1500);
+        });
+      }
+
+      function leaveRoom() {
+        disconnectSocket();
+        currentRoom = null;
+        gameState = null;
+        if (location.hash) {
+          history.replaceState(null, "", location.pathname + location.search);
+        }
+        showView("home");
+      }
+
+      function navigateToRoom(code) {
+        const clean = code.trim().toUpperCase();
+        if (!/^[A-Z]{4}$/.test(clean)) {
+          joinError.textContent = "Enter a 4-letter room code.";
+          joinError.classList.remove("hidden");
+          return;
+        }
+        joinError.classList.add("hidden");
+        if (location.hash !== "#" + clean) {
+          location.hash = "#" + clean;
+        } else {
+          connectToRoom(clean);
+        }
+      }
+
+      // Event listeners
+      createBtn.addEventListener("click", () => {
+        navigateToRoom(generateRoomCode());
+      });
+
+      joinForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        navigateToRoom(roomInput.value);
+      });
+
+      roomInput.addEventListener("input", () => {
+        roomInput.value = roomInput.value.replace(/[^a-zA-Z]/g, "").toUpperCase().slice(0, 4);
+        joinError.classList.add("hidden");
+      });
+
+      placeBtn.addEventListener("click", () => {
+        if (!ws || ws.readyState !== WebSocket.OPEN) return;
+        if (selectedCol === null || selectedRow === null) return;
+        hideTakenBanner();
+        ws.send(JSON.stringify({ type: "move", x: selectedCol, y: selectedRow }));
+      });
+
+      rematchBtn.addEventListener("click", () => {
+        if (!ws || ws.readyState !== WebSocket.OPEN) return;
+        ws.send(JSON.stringify({ type: "rematch" }));
+      });
+
+      inviteBtn.addEventListener("click", async () => {
+        if (!currentRoom) return;
+        const shareUrl = `${location.origin}/#${currentRoom}`;
+        const originalText = inviteBtn.textContent;
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: "Blindfold Connect 5",
+              text: `Join my Blindfold Connect 5 room (${currentRoom})`,
+              url: shareUrl,
+            });
+            return;
+          } catch (err) {
+            if (err && err.name === "AbortError") return;
+          }
+        }
+        try {
+          await navigator.clipboard.writeText(shareUrl);
+        } catch {
+          const ta = document.createElement("textarea");
+          ta.value = shareUrl;
+          ta.style.position = "fixed";
+          ta.style.opacity = "0";
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand("copy");
+          document.body.removeChild(ta);
+        }
+        inviteBtn.textContent = "Copied!";
+        setTimeout(() => {
+          inviteBtn.textContent = originalText;
+        }, 1600);
+      });
+
+      leaveBtn.addEventListener("click", leaveRoom);
+      fullHomeBtn.addEventListener("click", leaveRoom);
+
+      function handleHash() {
+        const raw = location.hash.replace(/^#/, "").trim().toUpperCase();
+        if (/^[A-Z]{4}$/.test(raw)) {
+          if (currentRoom !== raw) {
+            connectToRoom(raw);
+          }
+        } else {
+          if (currentRoom !== null) {
+            disconnectSocket();
+            currentRoom = null;
+            gameState = null;
+          }
+          showView("home");
+        }
+      }
+
+      window.addEventListener("hashchange", handleHash);
+      handleHash();
+    })();
+  </script>
+</body>
+</html>
