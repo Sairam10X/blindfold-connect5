@@ -172,6 +172,28 @@
       gap: 10px;
     }
 
+    .name-input {
+      width: 100%;
+      min-height: 46px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .name-input:focus {
+      outline: 2px solid var(--mint);
+      outline-offset: 1px;
+    }
+
+    .home-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
     .code-input {
       flex: 1;
       min-height: 48px;
@@ -247,6 +269,25 @@
       align-items: center;
       gap: 8px;
       font-weight: 700;
+      min-width: 0;
+    }
+
+    .seat-name-text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .edit-name-btn {
+      min-height: 28px;
+      min-width: 28px;
+      padding: 2px 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
     }
 
     .stone-dot {
@@ -397,26 +438,59 @@
       color: var(--text-muted);
     }
 
-    .tap-grid {
+    .matrix-grid {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 6px;
+      grid-template-columns: 18px repeat(15, minmax(0, 1fr));
+      gap: 2px;
+      align-items: center;
+      width: 100%;
     }
 
-    .tap-btn {
-      min-height: 44px;
-      padding: 0;
-      font-size: 1rem;
+    .matrix-axis {
+      font-size: 0.62rem;
       font-weight: 700;
+      color: var(--text-muted);
+      text-align: center;
+      user-select: none;
+      line-height: 1.2;
+    }
+
+    .matrix-axis.active {
+      color: var(--mint);
+    }
+
+    .matrix-cell {
+      min-width: 0;
+      min-height: 0;
+      width: 100%;
+      aspect-ratio: 1;
+      padding: 0;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
       display: flex;
       align-items: center;
       justify-content: center;
+      position: relative;
     }
 
-    .tap-btn.selected {
+    .matrix-cell.crosshair {
+      background: var(--mint-soft);
+      border-color: rgba(52, 211, 153, 0.35);
+    }
+
+    .matrix-cell.selected {
       background: var(--mint);
-      color: var(--mint-text);
       border-color: var(--mint);
+      box-shadow: 0 0 0 1.5px var(--mint);
+    }
+
+    .matrix-cell.selected::after {
+      content: "";
+      width: 42%;
+      height: 42%;
+      border-radius: 50%;
+      background: var(--mint-text);
     }
 
     .place-btn {
@@ -567,13 +641,23 @@
 <body>
   <main class="app">
     <!-- Home View -->
-    <section id="home-view">
+    <section id="home-view" class="home-cards">
       <div class="brand">
         <h1>Blindfold Connect 5</h1>
         <p>15×15 coordinate-only five-in-a-row. No board until the game ends.</p>
       </div>
 
       <div class="card">
+        <label for="player-name-input" class="grid-title">Your name</label>
+        <input
+          id="player-name-input"
+          class="name-input"
+          type="text"
+          maxlength="24"
+          placeholder="Enter your name (optional)"
+          autocomplete="nickname"
+          aria-label="Your player name"
+        >
         <button id="create-btn" class="primary" type="button">Create room</button>
       </div>
 
@@ -619,13 +703,29 @@
       <div class="players-bar">
         <span class="seat-pill" id="seat-pill">
           <span class="stone-dot ivory" id="seat-dot"></span>
-          <span id="seat-label">Connecting...</span>
+          <span class="seat-name-text" id="seat-label">Connecting...</span>
+          <button id="edit-name-btn" class="edit-name-btn" type="button" aria-label="Edit your name">Edit</button>
         </span>
         <span class="opponent-status">
           <span class="presence-dot" id="opp-dot"></span>
           <span id="opp-status-text">Waiting for opponent</span>
         </span>
       </div>
+
+      <form id="inline-name-form" class="card hidden" style="padding:12px;" novalidate>
+        <div class="join-row">
+          <input
+            id="inline-name-input"
+            class="name-input"
+            type="text"
+            maxlength="24"
+            placeholder="Your name"
+            aria-label="Edit your player name"
+          >
+          <button type="submit" class="primary">Save</button>
+          <button id="cancel-name-btn" type="button" class="ghost">Cancel</button>
+        </div>
+      </form>
 
       <div class="status-card" id="status-card">
         <div class="status-line" id="status-line">Share the invite to start</div>
@@ -643,21 +743,16 @@
 
       <div id="taken-banner" class="taken-banner hidden" role="alert"></div>
 
-      <!-- Active Play Picker (Blindfold) -->
+      <!-- Active Play Picker (Blindfold 15x15 Matrix) -->
       <div id="picker-card" class="picker-card">
         <div class="selection-readout">
           <span class="selection-label">Selected coordinate</span>
-          <span class="selection-coord empty" id="selection-readout">Pick col &amp; row</span>
+          <span class="selection-coord empty" id="selection-readout">Tap a cell</span>
         </div>
 
         <div class="grid-section">
-          <div class="grid-title">Column (A–O)</div>
-          <div class="tap-grid" id="col-grid" role="group" aria-label="Columns A to O"></div>
-        </div>
-
-        <div class="grid-section">
-          <div class="grid-title">Row (1–15)</div>
-          <div class="tap-grid" id="row-grid" role="group" aria-label="Rows 1 to 15"></div>
+          <div class="grid-title">15×15 Blindfold Matrix (A–O / 1–15)</div>
+          <div id="matrix-grid" class="matrix-grid" role="grid" aria-label="15 by 15 coordinate matrix"></div>
         </div>
 
         <button id="place-btn" class="primary place-btn" type="button" disabled>Place stone</button>
@@ -683,12 +778,14 @@
       const COLS = "ABCDEFGHIJKLMNO";
       const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ"; // No I or O
       const TOKEN_KEY = "bc5_token";
+      const NAME_KEY = "bc5_name";
 
       // DOM elements
       const homeView = document.getElementById("home-view");
       const fullView = document.getElementById("full-view");
       const gameView = document.getElementById("game-view");
 
+      const playerNameInput = document.getElementById("player-name-input");
       const createBtn = document.getElementById("create-btn");
       const joinForm = document.getElementById("join-form");
       const roomInput = document.getElementById("room-input");
@@ -700,19 +797,23 @@
       const leaveBtn = document.getElementById("leave-btn");
       const seatDot = document.getElementById("seat-dot");
       const seatLabel = document.getElementById("seat-label");
+      const editNameBtn = document.getElementById("edit-name-btn");
+      const inlineNameForm = document.getElementById("inline-name-form");
+      const inlineNameInput = document.getElementById("inline-name-input");
+      const cancelNameBtn = document.getElementById("cancel-name-btn");
       const oppDot = document.getElementById("opp-dot");
       const oppStatusText = document.getElementById("opp-status-text");
 
       const statusCard = document.getElementById("status-card");
       const statusLine = document.getElementById("status-line");
+      const oppLastMoveLabel = statusCard.querySelector(".moves-summary .move-stat-label");
       const oppLastMoveEl = document.getElementById("opp-last-move");
       const yourLastMoveEl = document.getElementById("your-last-move");
       const takenBanner = document.getElementById("taken-banner");
 
       const pickerCard = document.getElementById("picker-card");
       const selectionReadout = document.getElementById("selection-readout");
-      const colGrid = document.getElementById("col-grid");
-      const rowGrid = document.getElementById("row-grid");
+      const matrixGrid = document.getElementById("matrix-grid");
       const placeBtn = document.getElementById("place-btn");
 
       const revealCard = document.getElementById("reveal-card");
@@ -761,8 +862,30 @@
         return COLS[x] + String(y + 1);
       }
 
+      function getSavedName() {
+        return (localStorage.getItem(NAME_KEY) || "").trim().slice(0, 24);
+      }
+
+      function saveName(raw) {
+        const clean = String(raw || "").trim().replace(/\s+/g, " ").slice(0, 24);
+        if (clean) {
+          localStorage.setItem(NAME_KEY, clean);
+        } else {
+          localStorage.removeItem(NAME_KEY);
+        }
+        playerNameInput.value = clean;
+        return clean;
+      }
+
+      playerNameInput.value = getSavedName();
+
       function seatName(seat) {
         return seat === 1 ? "Ivory" : "Ember";
+      }
+
+      function displayName(seat) {
+        const custom = gameState?.names?.[seat - 1];
+        return custom || seatName(seat);
       }
 
       function vibrate(pattern) {
@@ -781,37 +904,50 @@
         gameView.classList.toggle("hidden", view !== "game");
       }
 
-      // Build tap-grids once
-      const colButtons = [];
+      // Build 15x15 blindfold coordinate matrix once
+      const matrixColAxes = [];
+      const matrixRowAxes = [];
+      const matrixCells = [];
+
+      const matrixCorner = document.createElement("div");
+      matrixCorner.className = "matrix-axis";
+      matrixGrid.appendChild(matrixCorner);
+
       for (let x = 0; x < 15; x++) {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "tap-btn";
-        btn.textContent = COLS[x];
-        btn.setAttribute("aria-label", "Column " + COLS[x]);
-        btn.addEventListener("click", () => {
-          selectedCol = selectedCol === x ? null : x;
-          hideTakenBanner();
-          renderPicker();
-        });
-        colGrid.appendChild(btn);
-        colButtons.push(btn);
+        const colLbl = document.createElement("div");
+        colLbl.className = "matrix-axis";
+        colLbl.textContent = COLS[x];
+        matrixGrid.appendChild(colLbl);
+        matrixColAxes.push(colLbl);
       }
 
-      const rowButtons = [];
       for (let y = 0; y < 15; y++) {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "tap-btn";
-        btn.textContent = String(y + 1);
-        btn.setAttribute("aria-label", "Row " + String(y + 1));
-        btn.addEventListener("click", () => {
-          selectedRow = selectedRow === y ? null : y;
-          hideTakenBanner();
-          renderPicker();
-        });
-        rowGrid.appendChild(btn);
-        rowButtons.push(btn);
+        const rowLbl = document.createElement("div");
+        rowLbl.className = "matrix-axis";
+        rowLbl.textContent = String(y + 1);
+        matrixGrid.appendChild(rowLbl);
+        matrixRowAxes.push(rowLbl);
+
+        for (let x = 0; x < 15; x++) {
+          const cell = document.createElement("button");
+          cell.type = "button";
+          cell.className = "matrix-cell";
+          cell.setAttribute("role", "gridcell");
+          cell.setAttribute("aria-label", formatCoord(x, y));
+          cell.addEventListener("click", () => {
+            if (selectedCol === x && selectedRow === y) {
+              selectedCol = null;
+              selectedRow = null;
+            } else {
+              selectedCol = x;
+              selectedRow = y;
+            }
+            hideTakenBanner();
+            renderPicker();
+          });
+          matrixGrid.appendChild(cell);
+          matrixCells.push({ x, y, el: cell });
+        }
       }
 
       function hideTakenBanner() {
@@ -820,24 +956,24 @@
       }
 
       function renderPicker() {
-        colButtons.forEach((btn, idx) => {
-          btn.classList.toggle("selected", selectedCol === idx);
+        matrixColAxes.forEach((lbl, idx) => {
+          lbl.classList.toggle("active", selectedCol === idx);
         });
-        rowButtons.forEach((btn, idx) => {
-          btn.classList.toggle("selected", selectedRow === idx);
+        matrixRowAxes.forEach((lbl, idx) => {
+          lbl.classList.toggle("active", selectedRow === idx);
+        });
+        matrixCells.forEach(({ x, y, el }) => {
+          const isSelected = selectedCol === x && selectedRow === y;
+          const isCrosshair = !isSelected && (selectedCol === x || selectedRow === y);
+          el.classList.toggle("selected", isSelected);
+          el.classList.toggle("crosshair", isCrosshair);
         });
 
         if (selectedCol !== null && selectedRow !== null) {
           selectionReadout.textContent = formatCoord(selectedCol, selectedRow);
           selectionReadout.classList.remove("empty");
-        } else if (selectedCol !== null) {
-          selectionReadout.textContent = COLS[selectedCol] + "·";
-          selectionReadout.classList.remove("empty");
-        } else if (selectedRow !== null) {
-          selectionReadout.textContent = "·" + String(selectedRow + 1);
-          selectionReadout.classList.remove("empty");
         } else {
-          selectionReadout.textContent = "Pick col & row";
+          selectionReadout.textContent = "Tap a cell";
           selectionReadout.classList.add("empty");
         }
 
@@ -899,18 +1035,24 @@
 
         const { you, turn, winner, ready, online, moves, board, line } = gameState;
         const oppSeat = you === 1 ? 2 : 1;
+        const yourName = displayName(you);
+        const oppName = displayName(oppSeat);
 
         // Seat display
         seatDot.className = "stone-dot " + (you === 1 ? "ivory" : "ember");
-        seatLabel.textContent = `You: ${seatName(you)}`;
+        seatLabel.textContent = yourName === seatName(you)
+          ? `You: ${yourName}`
+          : `You: ${yourName} (${seatName(you)})`;
 
         // Opponent online/offline status
         const oppOnline = Boolean(online && online[oppSeat - 1]);
         oppDot.classList.toggle("online", ready && oppOnline);
         if (!ready) {
           oppStatusText.textContent = "Waiting for opponent";
+          oppLastMoveLabel.textContent = "Opponent's last move";
         } else {
-          oppStatusText.textContent = oppOnline ? "Opponent online" : "Opponent offline";
+          oppStatusText.textContent = oppOnline ? `${oppName} online` : `${oppName} offline`;
+          oppLastMoveLabel.textContent = `${oppName}'s last move`;
         }
 
         // Status line
@@ -969,7 +1111,8 @@
           historyList.innerHTML = "";
           moves.forEach((m) => {
             const li = document.createElement("li");
-            const who = m.p === you ? `${seatName(m.p)} (You)` : seatName(m.p);
+            const pName = displayName(m.p);
+            const who = m.p === you ? `${pName} (You)` : pName;
             li.textContent = `${who}: ${formatCoord(m.x, m.y)}`;
             historyList.appendChild(li);
           });
@@ -1017,6 +1160,7 @@
 
         roomCodeLabel.textContent = code;
         seatLabel.textContent = "Connecting...";
+        inlineNameForm.classList.add("hidden");
         oppStatusText.textContent = "Waiting for opponent";
         statusLine.textContent = "Share the invite to start";
         oppLastMoveEl.textContent = "—";
@@ -1037,8 +1181,10 @@
 
         intentionalClose = false;
         const token = getToken();
+        const savedName = getSavedName();
         const proto = location.protocol === "https:" ? "wss:" : "ws:";
-        const url = `${proto}//${location.host}/ws/${code}?t=${encodeURIComponent(token)}`;
+        const nameParam = savedName ? `&name=${encodeURIComponent(savedName)}` : "";
+        const url = `${proto}//${location.host}/ws/${code}?t=${encodeURIComponent(token)}${nameParam}`;
         const socket = new WebSocket(url);
         ws = socket;
 
@@ -1130,12 +1276,42 @@
       }
 
       // Event listeners
+      playerNameInput.addEventListener("input", () => {
+        const clean = playerNameInput.value.replace(/\s+/g, " ").slice(0, 24);
+        if (clean.trim()) {
+          localStorage.setItem(NAME_KEY, clean.trim());
+        } else {
+          localStorage.removeItem(NAME_KEY);
+        }
+      });
+
+      editNameBtn.addEventListener("click", () => {
+        inlineNameInput.value = getSavedName();
+        inlineNameForm.classList.remove("hidden");
+        inlineNameInput.focus();
+      });
+
+      cancelNameBtn.addEventListener("click", () => {
+        inlineNameForm.classList.add("hidden");
+      });
+
+      inlineNameForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const clean = saveName(inlineNameInput.value);
+        inlineNameForm.classList.add("hidden");
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: "name", name: clean }));
+        }
+      });
+
       createBtn.addEventListener("click", () => {
+        saveName(playerNameInput.value);
         navigateToRoom(generateRoomCode());
       });
 
       joinForm.addEventListener("submit", (e) => {
         e.preventDefault();
+        saveName(playerNameInput.value);
         navigateToRoom(roomInput.value);
       });
 

@@ -14,6 +14,7 @@ function createEmptyBoard() {
 function createInitialGame() {
   return {
     players: [],
+    names: ["", ""],
     starter: 1,
     turn: 1,
     winner: null,
@@ -21,6 +22,11 @@ function createInitialGame() {
     moves: [],
     board: createEmptyBoard(),
   };
+}
+
+function sanitizeName(raw) {
+  if (typeof raw !== "string") return "";
+  return raw.trim().replace(/\s+/g, " ").slice(0, 24);
 }
 
 function inBounds(x, y) {
@@ -102,6 +108,7 @@ export class Room {
     }
 
     let seat = this.game.players.indexOf(token) + 1;
+    let dirty = false;
     if (seat === 0) {
       if (this.game.players.length >= 2) {
         const pair = new WebSocketPair();
@@ -114,6 +121,19 @@ export class Room {
 
       this.game.players.push(token);
       seat = this.game.players.length;
+      dirty = true;
+    }
+
+    if (!Array.isArray(this.game.names)) {
+      this.game.names = ["", ""];
+    }
+    const cleanName = sanitizeName(url.searchParams.get("name"));
+    if (cleanName && this.game.names[seat - 1] !== cleanName) {
+      this.game.names[seat - 1] = cleanName;
+      dirty = true;
+    }
+
+    if (dirty) {
       await this.state.storage.put("game", this.game);
     }
 
@@ -194,6 +214,16 @@ export class Room {
 
       await this.state.storage.put("game", this.game);
       this.broadcastState();
+    } else if (data.type === "name") {
+      if (!Array.isArray(this.game.names)) {
+        this.game.names = ["", ""];
+      }
+      const cleanName = sanitizeName(data.name);
+      if (this.game.names[seat - 1] !== cleanName) {
+        this.game.names[seat - 1] = cleanName;
+        await this.state.storage.put("game", this.game);
+        this.broadcastState();
+      }
     }
   }
 
@@ -232,6 +262,10 @@ export class Room {
         winner: this.game.winner,
         ready,
         online,
+        names: [
+          this.game.names?.[0] || "Ivory",
+          this.game.names?.[1] || "Ember",
+        ],
         moves: this.game.moves,
         board: isOver ? this.game.board : null,
         line: isOver ? this.game.line : null,
